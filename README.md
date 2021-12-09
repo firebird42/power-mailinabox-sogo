@@ -5,6 +5,9 @@ Power Mail-in-a-Box (a fork of [Mail-in-a-Box](https://mailinabox.email/)) is a 
 
 It's main difference to the main project is focused on ad-hoc, advanced features. While Mail-in-a-Box caters to beginners by providing sane configurations, Power Mail-in-a-Box also attempts to cater to advanced users that want deeper levels of customization.
 
+## About This Fork
+This is a fork of the aforementioned [Power Mail-in-a-Box](https://github.com/ddavness/power-mailinabox). This project will attempt to replace Roundcube and Nextcloud with [SOGo](https://www.sogo.nu/) as in inspired by [this fork of Mail-in-Box](https://github.com/jkaberg/mailinabox-sogo) which did something similar with v0.19a of Mail-in-a-Box.
+
 ## Features
 - Configure Power Mail-in-a-Box to use an external SMTP relay;
 - Brand new admin panel (with up-to-date libraries);
@@ -73,5 +76,5 @@ sudo dpkg-reconfigure locales
 
 3. Run the following command, and then follow the instructions that appear on the screen:
 ```
-curl https://raw.githubusercontent.com/ddavness/power-mailinabox/main/setup/bootstrap.sh | sudo bash
+curl https://raw.githubusercontent.com/firebird42/power-mailinabox-sogo/main/setup/bootstrap.sh | sudo bash
 ```
