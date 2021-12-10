@@ -35,7 +35,7 @@ if [ -z "$TAG" ]; then
 		[ "$OS" == "Debian GNU/Linux 11 (bullseye)" ] ||
 		[ "$(echo $OS | grep -o 'Ubuntu 20.04')" == "Ubuntu 20.04" ]
 	then
-		TAG=v55.2
+		TAG=v55.1.1
 	else
 		echo "This script must be run on a system running one of the following OS-es:"
 		echo "* Debian 10 (buster)"
@@ -57,7 +57,7 @@ if [ ! -d $HOME/mailinabox ]; then
 	echo Downloading Mail-in-a-Box $TAG. . .
 	git clone \
 		-b $TAG --depth 1 \
-		https://github.com/ddavness/power-mailinabox \
+		https://github.com/firebird42/power-mailinabox-sogo \
 		$HOME/mailinabox \
 		< /dev/null 2> /dev/null
 
