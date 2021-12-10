@@ -232,10 +232,10 @@ def mail_users_password():
 @app.route('/mail/users/name', methods=['POST'])
 @authorized_personnel_only
 def mail_users_name():
-    try:
-        return set_mail_name(request.form.get('email', ''), request.form.get('name', ''), env)
-    except ValueError as e:
-        return (str(e), 400)
+	try:
+		return set_mail_name(request.form.get('email', ''), request.form.get('name', ''), env)
+	except ValueError as e:
+		return (str(e), 400)
 
 @app.route('/mail/users/remove', methods=['POST'])
 @authorized_personnel_only

@@ -97,15 +97,15 @@ def is_dcv_address(email):
 # in plain text somewhere? Will surely need to revisit this.
 def open_database(env, with_connection=False):
 	conn = MySQLdb.connect(host="localhost", read_default_file='/etc/mysql/debian.cnf', db="mailinabox")
-    if not with_connection:
-        return conn.cursor()
-    else:
-        return conn, conn.cursor()
+	if not with_connection:
+		return conn.cursor()
+	else:
+		return conn, conn.cursor()
 
 # We need to help SOGo find the mail dir, this is CONACT'd in the MySQL DB along with the storage location.
 def get_maildir(email):
-    e = email.split('@')
-    return '%s/%s/' % (e[1], e[0])
+	e = email.split('@')
+	return '%s/%s/' % (e[1], e[0])
 
 def get_mail_users(env):
 	# Returns a flat, sorted list of all user accounts.
@@ -391,7 +391,7 @@ def add_mail_user(email, pw, privs, quota, env):
 	pw = hash_password(pw)
 
 	# get the maildir
-    maildir = get_maildir(email)
+	maildir = get_maildir(email)
 
 	# add the user to the database
 	try:
@@ -424,20 +424,20 @@ def set_mail_password(email, pw, env):
 	return "OK"
 
 def set_mail_name(email, name, env):
-    # validate that the name is acceptable
-    print(name)
-    if name == "":
-        return ("You can't submit an empty name.")
-    elif len(name) <= 4:
-        return ("You must submit a name with atleast 4 characters.")
+	# validate that the name is acceptable
+	print(name)
+	if name == "":
+		return ("You can't submit an empty name.")
+	elif len(name) <= 4:
+		return ("You must submit a name with atleast 4 characters.")
 
-    # update the database
-    conn, c = open_database(env, with_connection=True)
-    c.execute("""UPDATE miab_users SET name=%s WHERE email=%s""", (name, email))
-    if c.rowcount != 1:
-        return ("That's not a user (%s)." % email, 400)
-    conn.commit()
-    return "OK"
+	# update the database
+	conn, c = open_database(env, with_connection=True)
+	c.execute("""UPDATE miab_users SET name=%s WHERE email=%s""", (name, email))
+	if c.rowcount != 1:
+		return ("That's not a user (%s)." % email, 400)
+	conn.commit()
+	return "OK"
 
 def hash_password(pw):
 	# Turn the plain password into a Dovecot-format hashed password, meaning
