@@ -18,7 +18,7 @@ apt_install sqlite clamav-daemon clamav clamsmtp unzip p7zip zip arj bzip2 cabex
 # Add X-AV-Checked Header
 # Adds script to notify destination user only (since sender may be spoofed) that mail was dropped due to virus detection)
 
-tools/editconf.py /etc/clamsmtpd.conf -s \
+management/editconf.py /etc/clamsmtpd.conf -s \
                 OutAddress:=127.0.0.1:10028 \
                 Listen:=127.0.0.1:10027 \
                 Header:="X-AV-Checked: ClamAV" \
@@ -26,13 +26,13 @@ tools/editconf.py /etc/clamsmtpd.conf -s \
 
 # Configure postfix main.cf
 
-tools/editconf.py /etc/postfix/main.cf \
+management/editconf.py /etc/postfix/main.cf \
 content_filter=scan:127.0.0.1:10027 #\
 #not sure if the below is needed/wanted, RFC - http://www.postfix.org/postconf.5.html#receive_override_options
 #receive_override_options=no_address_mappings
 
 # Configure postfix master.cf
-tools/editconf.py /etc/postfix/master.cf -s -w \
+management/editconf.py /etc/postfix/master.cf -s -w \
         "scan=unix  -       -       n       -       16      smtp
           -o smtp_send_xforward_command=yes" \
         "127.0.0.1:10028=inet  n -       n       -       16      smtpd
@@ -46,7 +46,7 @@ tools/editconf.py /etc/postfix/master.cf -s -w \
           -o smtpd_authorized_xforward_hosts=127.0.0.0/8"
 
 # Allow supplementary groups, otherwise daemon will fail
-tools/editconf.py /etc/clamav/clamd.conf -s \
+management/editconf.py /etc/clamav/clamd.conf -s \
         AllowSupplementaryGroups=True
 
 # Add clamsmtp user to clamav group

@@ -29,7 +29,7 @@ cp /usr/share/dovecot/solr-schema.xml /etc/solr/conf/schema.xml
 #
 # Break-imap-search makes search work the way users expect, rather than the way
 # the IMAP specification expects
-tools/editconf.py /etc/dovecot/conf.d/10-mail.conf \
+management/editconf.py /etc/dovecot/conf.d/10-mail.conf \
         mail_plugins="$mail_plugins fts fts_solr"
 
 cat > /etc/dovecot/conf.d/90-plugin-fts.conf << EOF;

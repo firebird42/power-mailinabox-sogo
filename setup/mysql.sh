@@ -23,7 +23,7 @@ if [ ! -d $MYSQL_DATADIR ]; then
     service mysql stop >> /dev/null
 
     # Change the datadir location for MySQL
-    tools/editconf.py /etc/mysql/mysql.conf.d/mysqld.cnf datadir=$MYSQL_DATADIR
+    management/editconf.py /etc/mysql/mysql.conf.d/mysqld.cnf datadir=$MYSQL_DATADIR
 
     # Create the new database location in our $STORAGE_ROOT
     mkdir -p $MYSQL_DATADIR
@@ -59,6 +59,6 @@ mysql --defaults-file=/etc/mysql/debian.cnf -e "GRANT ALL PRIVILEGES ON ${MIAB_S
 # Set root password to 1234, and allow connections from anywhere for root user
 #mysql --defaults-file=/etc/mysql/debian.cnf -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('1234'); FLUSH PRIVILEGES;" >> /dev/null
 #mysql --defaults-file=/etc/mysql/debian.cnf -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'test123';"
-#tools/editconf.py /etc/mysql/mysql.conf.d/mysqld.cnf "bind-address=0.0.0.0"
+#management/editconf.py /etc/mysql/mysql.conf.d/mysqld.cnf "bind-address=0.0.0.0"
 #restart_service mysql
 #hide_output ufw allow mysql
