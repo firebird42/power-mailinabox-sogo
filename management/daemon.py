@@ -18,7 +18,7 @@ from functools import wraps
 from flask import Flask, request, render_template, abort, Response, send_from_directory, make_response
 
 import auth, utils
-from mailconfig import get_mail_users, get_mail_users_ex, get_admins, add_mail_user, set_mail_password, remove_mail_user
+from mailconfig import get_mail_users, get_mail_users_ex, get_admins, add_mail_user, set_mail_password, set_mail_name, remove_mail_user
 from mailconfig import get_mail_user_privileges, add_remove_mail_user_privilege, open_database
 from mailconfig import get_mail_aliases, get_mail_aliases_ex, get_mail_domains, add_mail_alias, remove_mail_alias
 from mailconfig import get_mail_quota, set_mail_quota, get_default_quota, validate_quota
@@ -195,7 +195,7 @@ def mail_users():
 def mail_users_add():
 	quota = request.form.get('quota', get_default_quota(env))
 	try:
-		return add_mail_user(request.form.get('email', ''), request.form.get('password', ''), request.form.get('privileges', ''), quota, env)
+		return add_mail_user(request.form.get('email', ''), request.form.get('password', ''), request.form.get('privileges', ''), request.form.get('name', ''), quota, env)
 	except ValueError as e:
 		return (str(e), 400)
 
@@ -228,6 +228,14 @@ def mail_users_password():
 		return set_mail_password(request.form.get('email', ''), request.form.get('password', ''), env)
 	except ValueError as e:
 		return (str(e), 400)
+
+@app.route('/mail/users/name', methods=['POST'])
+@authorized_personnel_only
+def mail_users_name():
+    try:
+        return set_mail_name(request.form.get('email', ''), request.form.get('name', ''), env)
+    except ValueError as e:
+        return (str(e), 400)
 
 @app.route('/mail/users/remove', methods=['POST'])
 @authorized_personnel_only
@@ -769,7 +777,7 @@ def smtp_relay_set():
 			if len(sp) != 2:
 				return ("DKIM public key RR is malformed!", 400)
 			components[sp[0]] = sp[1]
-		
+
 		if not components.get("p"):
 			return ("The DKIM public key doesn't exist!", 400)
 
@@ -780,7 +788,7 @@ def smtp_relay_set():
 	implicit_tls = False
 
 	if newconf.get("enabled") == "true":
-		relay_on = True		
+		relay_on = True
 
 		# Try negotiating TLS directly. We need to know this because we need to configure Postfix
 		# to be aware of this detail.
@@ -822,7 +830,7 @@ def smtp_relay_set():
 		], delimiter_re=r"\s*=\s*", delimiter="=", comment_char="#")
 
 		# Edit the sasl password (still will edit the file, but keep the pw)
-		
+
 		with open(pw_file, "a+") as f:
 			f.seek(0)
 			pwm = re.match(r"\[.+\]\:[0-9]+\s.+\:(.*)", f.readline())

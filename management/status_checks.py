@@ -24,7 +24,7 @@ from utils import shell, sort_domains, load_env_vars_from_file, load_settings
 def get_services():
 	return [
 		{ "name": "Local DNS (bind9)", "port": 53, "public": False, },
-		#{ "name": "NSD Control", "port": 8952, "public": False, },
+		{ "name": "NSD Control", "port": 8952, "public": False, },
 		{ "name": "Local DNS Control (bind9/rndc)", "port": 953, "public": False, },
 		{ "name": "Dovecot LMTP LDA", "port": 10026, "public": False, },
 		{ "name": "Postgrey", "port": 10023, "public": False, },
@@ -32,6 +32,8 @@ def get_services():
 		{ "name": "OpenDKIM", "port": 8891, "public": False, },
 		{ "name": "OpenDMARC", "port": 8893, "public": False, },
 		{ "name": "Mail-in-a-Box Management Daemon", "port": 10222, "public": False, },
+		{ "name": "SOGo Groupware", "port": 20000, "public": False, },
+		{ "name": "MySQL Server", "port": 3306, "public": False,}
 		{ "name": "SSH Login (ssh)", "port": get_ssh_port(), "public": True, },
 		{ "name": "Public DNS (nsd4)", "port": 53, "public": True, },
 		{ "name": "Incoming Mail (SMTP/postfix)", "port": 25, "public": True, },
@@ -1054,7 +1056,7 @@ def get_latest_miab_version():
     from socket import timeout
 
     try:
-        return re.search(b'TAG=(.*)', urlopen("https://raw.githubusercontent.com/ddavness/power-mailinabox/main/setup/bootstrap.sh", timeout=5).read()).group(1).decode("utf8")
+        return re.search(b'TAG=(.*)', urlopen("https://raw.githubusercontent.com/firebird42/power-mailinabox-sogo/main/setup/bootstrap.sh", timeout=5).read()).group(1).decode("utf8")
     except (HTTPError, URLError, timeout):
         return None
 
@@ -1076,7 +1078,7 @@ def check_miab_version(env, output):
 		elif latest_ver is None:
 			output.print_error("Latest Mail-in-a-Box version could not be determined. You are running version %s." % this_ver)
 		else:
-			output.print_error("A new version of Mail-in-a-Box is available. You are running version %s. The latest version is %s. For upgrade instructions, visit https://github.com/ddavness/power-mailinabox. "
+			output.print_error("A new version of Mail-in-a-Box is available. You are running version %s. The latest version is %s. For upgrade instructions, visit https://github.com/firebird42/power-mailinabox-sogo. "
 				% (this_ver, latest_ver))
 
 def run_and_output_changes(env, pool):

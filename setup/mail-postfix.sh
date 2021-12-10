@@ -42,7 +42,7 @@ source /etc/mailinabox.conf # load global vars
 # * `ca-certificates`: A trust store used to squelch postfix warnings about
 #   untrusted opportunistically-encrypted connections.
 echo "Installing Postfix (SMTP server)..."
-apt_install postfix postfix-sqlite postfix-pcre postgrey ca-certificates
+apt_install postfix postfix-mysql postfix-pcre postgrey ca-certificates
 
 # ### Basic Settings
 
@@ -58,7 +58,6 @@ management/editconf.py /etc/postfix/main.cf \
 	smtp_bind_address=$PRIVATE_IP \
 	smtp_bind_address6=$PRIVATE_IPV6 \
 	myhostname=$PRIMARY_HOSTNAME\
-	smtpd_banner="\$myhostname ESMTP Hi, I'm a Power Mail-in-a-Box (Debian/Postfix)" \
 	mydestination=localhost
 
 # Tweak some queue settings:

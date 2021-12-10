@@ -11,7 +11,7 @@
 
 <h3>Add a mail user</h3>
 
-<p>Add an email address to this system. This will create a new login username/password.</p>
+<p>Add an email address to this system. This will create a new login username/password. The name will be used with SOGo.</p>
 
 <form class="form-inline" role="form" onsubmit="return do_add_user(); return false;">
   <div class="form-group">
@@ -21,6 +21,10 @@
   <div class="form-group">
     <label class="sr-only" for="adduserPassword">Password</label>
     <input type="password" class="form-control" id="adduserPassword" placeholder="Password">
+  </div>
+  <div class="form-group">
+    <label class="sr-only" for="adduserName">Name</label>
+    <input type="text" class="form-control" id="adduserName" placeholder="Full name">
   </div>
   <div class="form-group">
     <select class="form-control" id="adduserPrivs">
@@ -84,6 +88,13 @@
             set password
           </a>
           |
+        </span>
+
+        <span class="if_active">
+          <a href="#" onclick="users_set_name(this); return false;" class='setname' title="Set Name">
+            set name
+            </a>
+            |
         </span>
 
         <span class='add-privs'>
@@ -202,6 +213,7 @@ function show_users() {
           n.attr('data-email', user.email);
           n.attr('data-quota', user.quota);
           n.find('.address').text(user.email);
+          n.find('.name').text(user.name);
           n.find('.box-count').text((user.box_count).toLocaleString('en'));
           if (user.box_count == '?') {
             n.find('.box-count').attr('title', 'Message count is unkown')
@@ -241,6 +253,7 @@ function do_add_user() {
   var pw = $("#adduserPassword").val();
   var privs = $("#adduserPrivs").val();
   var quota = $("#adduserQuota").val();
+  var name = $("#adduserName").val();
   api(
     "/mail/users/add",
     "POST",
@@ -248,7 +261,8 @@ function do_add_user() {
       email: email,
       password: pw,
       privileges: privs,
-      quota: quota
+      quota: quota,
+      name: name
     },
     function(r) {
       // Responses are multiple lines of pre-formatted text.
@@ -319,6 +333,31 @@ function users_set_quota(elem) {
                 });
         });
 }
+
+function users_set_name(elem) {
+      var email = $(elem).parents('tr').attr('data-email');
+
+      show_modal_confirm(
+              "Set Name",
+              $("<p>Set a new name for <b>" + email + "</b>?</p> <p><label for='users_set_name' style='display: block; font-weight: normal'>New Name:</label><input type='text' id='users_set_name'></p><p><small>Please submit a full name, eg. John Doe.</small></p>"),
+              "Set Name",
+              function () {
+                  api(
+                      "/mail/users/name",
+                      "POST",
+                      {
+                          email: email,
+                          name: $('#users_set_name').val()
+                      },
+                      function (r) {
+                          // Responses are multiple lines of pre-formatted text.
+                          show_modal_error("Set Name", $("<pre/>").text(r));
+                      },
+                      function (r) {
+                          show_modal_error("Set Name", r);
+                      });
+              });
+  }
 
 function users_remove(elem) {
   var email = $(elem).parents('tr').attr('data-email');

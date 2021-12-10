@@ -147,7 +147,7 @@ function ufw_limit {
 }
 
 function restart_service {
-	hide_output service $1 restart
+	hide_output systemctl restart $1
 }
 
 ## Dialog Functions ##

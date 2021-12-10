@@ -9,8 +9,9 @@
 # Python 3 in setup/questions.sh to validate the email
 # address entered by the user.
 
-import subprocess, shutil, os, sqlite3, re
+import subprocess, shutil, os, re
 import utils
+import MySQLdb
 from email_validator import validate_email as validate_email_, EmailNotValidError
 import idna
 
@@ -91,17 +92,25 @@ def is_dcv_address(email):
 			return True
 	return False
 
+# We're using root to access the mail DB. This isn't optimal,
+# but the alternative would be to store the MySQL user password
+# in plain text somewhere? Will surely need to revisit this.
 def open_database(env, with_connection=False):
-	conn = sqlite3.connect(env["STORAGE_ROOT"] + "/mail/users.sqlite")
-	if not with_connection:
-		return conn.cursor()
-	else:
-		return conn, conn.cursor()
+	conn = MySQLdb.connect(host="localhost", read_default_file='/etc/mysql/debian.cnf', db="mailinabox")
+    if not with_connection:
+        return conn.cursor()
+    else:
+        return conn, conn.cursor()
+
+# We need to help SOGo find the mail dir, this is CONACT'd in the MySQL DB along with the storage location.
+def get_maildir(email):
+    e = email.split('@')
+    return '%s/%s/' % (e[1], e[0])
 
 def get_mail_users(env):
 	# Returns a flat, sorted list of all user accounts.
 	c = open_database(env)
-	c.execute('SELECT email FROM users')
+	c.execute("""SELECT email FROM miab_users""")
 	users = [ row[0] for row in c.fetchall() ]
 	return utils.sort_email_addresses(users, env)
 
@@ -140,8 +149,8 @@ def get_mail_users_ex(env, with_archived=False):
 	users = []
 	active_accounts = set()
 	c = open_database(env)
-	c.execute('SELECT email, privileges, quota FROM users')
-	for email, privileges, quota in c.fetchall():
+	c.execute("""SELECT email, name, privileges FROM miab_users""")
+	for email, name, privileges, quota in c.fetchall():
 		active_accounts.add(email)
 
 		(user, domain) = email.split('@')
@@ -174,6 +183,7 @@ def get_mail_users_ex(env, with_archived=False):
 
 		user = {
 			"email": email,
+			"name": name,
 			"privileges": parse_privs(privileges),
             "quota": quota,
 			"box_quota": box_quota,
@@ -237,7 +247,7 @@ def get_admins(env):
 def get_mail_aliases(env):
 	# Returns a sorted list of tuples of (address, forward-tos, permitted-senders, auto).
 	c = open_database(env)
-	c.execute('SELECT source, destination, permitted_senders, 0 as auto FROM aliases UNION SELECT source, destination, permitted_senders, 1 as auto FROM auto_aliases')
+	c.execute("""SELECT source, destination, permitted_senders, 0 as auto FROM miab_aliases UNION SELECT source, destination, permitted_senders, 1 as auto FROM miab_auto_aliases""")
 	aliases = { row[0]: row for row in c.fetchall() } # make dict
 
 	# put in a canonical order: sort by domain, then by email address lexicographically
@@ -300,7 +310,7 @@ def get_noreply_addresses(env):
 	# Noreply addresses are a special type of addresses that are send-only.
 	# Mail sent to these addresses is automatically bounced with a customized message..
 	c = open_database(env)
-	c.execute('SELECT email FROM noreply')
+	c.execute("""SELECT email FROM miab_noreply""")
 	return set( row[0] for row in c.fetchall() )
 
 def get_domain(emailaddr, as_unicode=True):
@@ -380,11 +390,14 @@ def add_mail_user(email, pw, privs, quota, env):
 	# hash the password
 	pw = hash_password(pw)
 
+	# get the maildir
+    maildir = get_maildir(email)
+
 	# add the user to the database
 	try:
-		c.execute("INSERT INTO users (email, password, privileges, quota) VALUES (?, ?, ?, ?)",
-			(email, pw, "\n".join(privs), quota))
-	except sqlite3.IntegrityError:
+		c.execute("""INSERT INTO miab_users (email, password, name, maildir, privileges, quota) VALUES (%s, %s, %s, %s, %s, %s)""",
+			(email, pw, name, maildir, "\n".join(privs), quota))
+	except:
 		return ("User already exists.", 400)
 
 	# write databasebefore next step
@@ -404,22 +417,39 @@ def set_mail_password(email, pw, env):
 
 	# update the database
 	conn, c = open_database(env, with_connection=True)
-	c.execute("UPDATE users SET password=? WHERE email=?", (pw, email))
+	c.execute("""UPDATE miab_users SET password=%s WHERE email=%s""", (pw, email))
 	if c.rowcount != 1:
 		return ("That's not a user (%s)." % email, 400)
 	conn.commit()
 	return "OK"
 
+def set_mail_name(email, name, env):
+    # validate that the name is acceptable
+    print(name)
+    if name == "":
+        return ("You can't submit an empty name.")
+    elif len(name) <= 4:
+        return ("You must submit a name with atleast 4 characters.")
+
+    # update the database
+    conn, c = open_database(env, with_connection=True)
+    c.execute("""UPDATE miab_users SET name=%s WHERE email=%s""", (name, email))
+    if c.rowcount != 1:
+        return ("That's not a user (%s)." % email, 400)
+    conn.commit()
+    return "OK"
+
 def hash_password(pw):
 	# Turn the plain password into a Dovecot-format hashed password, meaning
 	# something like "{SCHEME}hashedpassworddata".
 	# http://wiki2.dovecot.org/Authentication/PasswordSchemes
-	return utils.shell('check_output', ["/usr/bin/doveadm", "pw", "-s", "SHA512-CRYPT", "-p", pw]).strip()
+	# TODO: Currently using SSHA256, we should really aim for SHA512-CRYPT or better.
+	return utils.shell('check_output', ["/usr/bin/doveadm", "pw", "-s", "SSHA256", "-p", pw]).strip()
 
 
 def get_mail_quota(email, env):
 	conn, c = open_database(env, with_connection=True)
-	c.execute("SELECT quota FROM users WHERE email=?", (email,))
+	c.execute("""SELECT quota FROM miab_users WHERE email=%s""", (email,))
 	rows = c.fetchall()
 	if len(rows) != 1:
 		return ("That's not a user (%s)." % email, 400)
@@ -433,7 +463,7 @@ def set_mail_quota(email, quota, env):
 
 	# update the database
 	conn, c = open_database(env, with_connection=True)
-	c.execute("UPDATE users SET quota=? WHERE email=?", (quota, email))
+	c.execute("""UPDATE miab_users SET quota=%s WHERE email=%s""", (quota, email))
 	if c.rowcount != 1:
 		return ("That's not a user (%s)." % email, 400)
 	conn.commit()
@@ -475,7 +505,7 @@ def get_mail_password(email, env):
 	# http://wiki2.dovecot.org/Authentication/PasswordSchemes
 	# update the database
 	c = open_database(env)
-	c.execute('SELECT password FROM users WHERE email=?', (email,))
+	c.execute("""SELECT password FROM miab_users WHERE email=%s""", (email,))
 	rows = c.fetchall()
 	if len(rows) != 1:
 		raise ValueError("That's not a user (%s)." % email)
@@ -484,7 +514,7 @@ def get_mail_password(email, env):
 def remove_mail_user(email, env):
 	# remove
 	conn, c = open_database(env, with_connection=True)
-	c.execute("DELETE FROM users WHERE email=?", (email,))
+	c.execute("""DELETE FROM miab_users WHERE email=%s""", (email,))
 	if c.rowcount != 1:
 		return ("That's not a user (%s)." % email, 400)
 	conn.commit()
@@ -498,7 +528,7 @@ def parse_privs(value):
 def get_mail_user_privileges(email, env, empty_on_error=False):
 	# get privs
 	c = open_database(env)
-	c.execute('SELECT privileges FROM users WHERE email=?', (email,))
+	c.execute("""SELECT privileges FROM miab_users WHERE email=%s""", (email,))
 	rows = c.fetchall()
 	if len(rows) != 1:
 		if empty_on_error: return []
@@ -530,7 +560,7 @@ def add_remove_mail_user_privilege(email, priv, action, env):
 
 	# commit to database
 	conn, c = open_database(env, with_connection=True)
-	c.execute("UPDATE users SET privileges=? WHERE email=?", ("\n".join(privs), email))
+	c.execute("""UPDATE miab_users SET privileges=%s WHERE email=%s""", ("\n".join(privs), email))
 	if c.rowcount != 1:
 		return ("Something went wrong.", 400)
 	conn.commit()
@@ -617,13 +647,13 @@ def add_mail_alias(address, forwards_to, permitted_senders, env, update_if_exist
 
 	conn, c = open_database(env, with_connection=True)
 	try:
-		c.execute("INSERT INTO aliases (source, destination, permitted_senders) VALUES (?, ?, ?)", (address, forwards_to, permitted_senders))
+		c.execute("""INSERT INTO miab_aliases (source, destination, permitted_senders) VALUES (%s, %s, %s)""", (address, forwards_to, permitted_senders))
 		return_status = "alias added"
 	except sqlite3.IntegrityError:
 		if not update_if_exists:
 			return ("Alias already exists (%s)." % address, 400)
 		else:
-			c.execute("UPDATE aliases SET destination = ?, permitted_senders = ? WHERE source = ?", (forwards_to, permitted_senders, address))
+			c.execute("""UPDATE miab_aliases SET destination = %s, permitted_senders = %s WHERE source = %s""", (forwards_to, permitted_senders, address))
 			return_status = "alias updated"
 
 	conn.commit()
@@ -638,7 +668,7 @@ def remove_mail_alias(address, env, do_kick=True):
 
 	# remove
 	conn, c = open_database(env, with_connection=True)
-	c.execute("DELETE FROM aliases WHERE source=?", (address,))
+	c.execute("""DELETE FROM miab_aliases WHERE source=%s""", (address,))
 	if c.rowcount != 1:
 		return ("That's not an alias (%s)." % address, 400)
 	conn.commit()
@@ -649,9 +679,9 @@ def remove_mail_alias(address, env, do_kick=True):
 
 def add_auto_aliases(aliases, env):
 	conn, c = open_database(env, with_connection=True)
-	c.execute("DELETE FROM auto_aliases");
+	c.execute("""DELETE FROM miab_auto_aliases""");
 	for source, destination in aliases.items():
-		c.execute("INSERT INTO auto_aliases (source, destination) VALUES (?, ?)", (source, destination))
+		c.execute("""INSERT INTO miab_auto_aliases (source, destination) VALUES (%s, %s)""", (source, destination))
 	conn.commit()
 
 def get_system_administrator(env):
@@ -702,20 +732,20 @@ def add_noreply_address(env, address, do_kick=True):
 		return ("This address is already an user.", 400)
 	elif email in get_mail_aliases(env):
 		return ("This address is already an alias.", 400)
-	
+
 	ret = ""
 
 	# Add the address
 	conn, c = open_database(env, with_connection=True)
 	try:
-		c.execute("INSERT INTO noreply (email) VALUES (?)", (email,))
+		c.execute("""INSERT INTO miab_noreply (email) VALUES (%s)""", (email,))
 		if do_kick:
 			ret = kick(env, "No-reply address (%s) added" % address)
 		else:
 			ret = "No-reply address (%s) added" % address
 	except sqlite3.IntegrityError:
 		return ("This noreply (%s) already exists." % address, 400)
-	
+
 	conn.commit()
 	return ret
 
@@ -724,7 +754,7 @@ def remove_noreply_address(env, address, do_kick=True):
 
 	# yeet yeet deleet
 	conn, c = open_database(env, with_connection=True)
-	c.execute("DELETE FROM noreply WHERE email=?", (email,))
+	c.execute("""DELETE FROM miab_noreply WHERE email=?""", (email,))
 	if c.rowcount != 1:
 		return ("That's not a noreply (%s)." % address, 400)
 	conn.commit()
@@ -753,7 +783,7 @@ def kick(env, mail_result=None):
 	existing_noreply = get_noreply_addresses(env)
 	for alias in required_aliases:
 		if alias == administrator: continue # don't make an alias from the administrator to itself --- this alias must be created manually
-		auto_aliases[alias] = administrator	
+		auto_aliases[alias] = administrator
 
 	# Add domain maps from Unicode forms of IDNA domains to the ASCII forms stored in the alias table.
 	for domain in get_mail_domains(env):
@@ -763,7 +793,7 @@ def kick(env, mail_result=None):
 			auto_aliases["@" + domain_unicode] = "@" + domain
 		except (ValueError, UnicodeError, idna.IDNAError):
 			continue
-	
+
 	add_auto_aliases(auto_aliases, env)
 	for address in required_noreply - existing_noreply:
 		add_noreply_address(env, address, do_kick=False)
