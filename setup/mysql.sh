@@ -49,11 +49,13 @@ if [ ! -d $MYSQL_DATADIR ]; then
 
     # Import our preconfigured database to MySQL
     mysql --defaults-file=/etc/mysql/debian.cnf ${MIAB_SQL_DB} < conf/mailinabox_init.sql >> /dev/null
+
+    # Create mailinabox user
+    mysql --defaults-file=/etc/mysql/debian.cnf -e "CREATE USER 'mailinabox'@'%' IDENTIFIED BY '${MIAB_SQL_PW}';"
 fi
 
 # Grant privs for mailinabox user so that postfix/dovecot and SOGo can interact with the DB
 # Note that the password changes on every install/upgrade
-mysql --defaults-file=/etc/mysql/debian.cnf -e "CREATE USER 'mailinabox'@'%' IDENTIFIED BY '${MIAB_SQL_PW}';"
 mysql --defaults-file=/etc/mysql/debian.cnf -e "GRANT ALL PRIVILEGES ON ${MIAB_SQL_DB}.* TO 'mailinabox'@'%'; GRANT ALL PRIVILEGES ON ${SOGO_SQL_DB}.* TO 'mailinabox'@'%'; FLUSH PRIVILEGES;" >> /dev/null
 
 ### TESTING
