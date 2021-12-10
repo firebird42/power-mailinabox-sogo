@@ -38,7 +38,7 @@ CREATE TABLE `miab_mfa` (
   PRIMARY KEY (`id`),
   FOREIGN KEY (`user_id`)
     REFERENCES `miab_users`(`id`),
-  ON DELETE CASCADE
+    ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `miab_auto_aliases` (
