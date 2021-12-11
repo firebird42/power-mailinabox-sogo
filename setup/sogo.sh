@@ -12,7 +12,7 @@ TIMEZONE=`cat /etc/timezone`
 FQDN=`hostname`
 DOMAIN=`hostname -d`
 
-hide_output apt-key adv --keyserver keys.gnupg.net --recv-key 0x810273C4
+hide_output apt-key adv --keyserver keyserver.ubuntu.com --recv-key 0x810273C4
 echo "deb http://packages.inverse.ca/SOGo/nightly/5/ubuntu/ focal focal" > /etc/apt/sources.list.d/sogo.list
 hide_output apt-get update
 
