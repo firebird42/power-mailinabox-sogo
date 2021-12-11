@@ -12,8 +12,22 @@ TIMEZONE=`cat /etc/timezone`
 FQDN=`hostname`
 DOMAIN=`hostname -d`
 
-hide_output apt-key adv --keyserver keyserver.ubuntu.com --recv-key 0x810273C4
-echo "deb http://packages.inverse.ca/SOGo/nightly/5/ubuntu/ focal focal" > /etc/apt/sources.list.d/sogo.list
+# Use unstable Debian Sid repository for arm64 as stable version currently (12/11/2021) is not available for arm64.
+if [ "$(uname-m)" == "aarch64" ]; then
+  echo "Package: *
+Pin: release a=unstable
+Pin-Priority: 100
+
+Package: sogo sogo-common sogo-activesync
+Pin: release a=unstable
+Pin-Priority: 999" > /etc/apt/preferences.d/sogo.pref
+  hide_output apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key 648ACFD622F3D138
+  hide_output apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key 0E98404D386FA1D9
+  echo "deb http://ftp.us.debian.org/debian/ sid main" > /etc/apt/sources.list.d/sogo.list
+else
+  hide_output apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key 0x810273C4
+  echo "deb http://packages.inverse.ca/SOGo/nightly/5/ubuntu/ focal focal" > /etc/apt/sources.list.d/sogo.list
+fi
 hide_output apt-get update
 
 if [[ -z $(mysql --defaults-file=/etc/mysql/debian.cnf ${MIAB_SQL_DB} -e "SHOW TABLES LIKE 'sogo_view'" -N -B) ]]; then
