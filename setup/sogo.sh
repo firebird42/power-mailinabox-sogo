@@ -13,7 +13,7 @@ FQDN=`hostname`
 DOMAIN=`hostname -d`
 
 # Use unstable Debian Sid repository for arm64 as stable version currently (12/11/2021) is not available for arm64.
-if [ "$(uname-m)" == "aarch64" ]; then
+if [ "$(uname -m)" == "aarch64" ]; then
   echo "Package: *
 Pin: release a=unstable
 Pin-Priority: 100
