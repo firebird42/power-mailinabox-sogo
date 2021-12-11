@@ -15,7 +15,7 @@ source /etc/mailinabox.conf # load global vars
 # The database of mail users (i.e. authenticated users, who have mailboxes)
 # and aliases (forwarders).
 
-db_path=$STORAGE_ROOT/mail/users.sqlite
+#db_path=$STORAGE_ROOT/mail/users.sqlite
 
 # Create an empty database if it doesn't yet exist.
 # if [ ! -f $db_path ]; then
