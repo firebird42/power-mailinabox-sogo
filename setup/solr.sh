@@ -42,7 +42,7 @@ EOF
 
 # Bump memory allocation for Solr.
 # Not needed? I'll let it sit here for a while.
-#echo 'export JAVA_OPTS=-Xms512M -Xmx1024M' > /usr/share/tomcat7/bin/setenv.sh
+#echo 'export JAVA_OPTS=-Xms512M -Xmx1024M' > /usr/share/tomcat9/bin/setenv.sh
 
 # Install cronjobs to keep FTS up to date
 hide_output install -m 755 conf/cronjob/dovecot /etc/cron.daily/
@@ -55,5 +55,5 @@ chown -R mail:dovecot /etc/dovecot
 chmod -R o-rwx /etc/dovecot
 
 # Restart services to reload solr schema & dovecot plugins
-restart_service tomcat7
+restart_service tomcat9
 restart_service dovecot
