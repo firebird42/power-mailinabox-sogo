@@ -56,7 +56,7 @@ fi
 
 # Grant privs for mailinabox user so that postfix/dovecot and SOGo can interact with the DB
 # Note that the password changes on every install/upgrade
-mysql --defaults-file=/etc/mysql/debian.cnf -e "ALTER USER 'mailinabox'@'%' IDENTIFIED BY '${MIAB_SQL_PW}'; FLUSH PRIVELEGES;"
+mysql --defaults-file=/etc/mysql/debian.cnf -e "ALTER USER 'mailinabox'@'%' IDENTIFIED BY '${MIAB_SQL_PW}'; FLUSH PRIVILEGES;"
 mysql --defaults-file=/etc/mysql/debian.cnf -e "GRANT ALL PRIVILEGES ON ${MIAB_SQL_DB}.* TO 'mailinabox'@'%'; GRANT ALL PRIVILEGES ON ${SOGO_SQL_DB}.* TO 'mailinabox'@'%'; FLUSH PRIVILEGES;" >> /dev/null
 
 ### TESTING
