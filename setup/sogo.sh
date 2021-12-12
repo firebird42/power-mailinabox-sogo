@@ -16,11 +16,7 @@ DOMAIN=`hostname -d`
 if [ "$(uname -m)" == "aarch64" ]; then
   echo "Package: *
 Pin: release a=unstable
-Pin-Priority: 100
-
-Package: sogo sogo-common sogo-activesync
-Pin: release a=unstable
-Pin-Priority: 999" > /etc/apt/preferences.d/sogo.pref
+Pin-Priority: 100" > /etc/apt/preferences.d/sogo.pref
   hide_output apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key 648ACFD622F3D138
   hide_output apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key 0E98404D386FA1D9
   echo "deb http://ftp.us.debian.org/debian/ sid main" > /etc/apt/sources.list.d/sogo.list
@@ -37,7 +33,12 @@ fi
 mysql --defaults-file=/etc/mysql/debian.cnf ${MIAB_SQL_DB} -e "CREATE VIEW grouped_aliases (dest, aliases) AS SELECT destination, IFNULL(GROUP_CONCAT(source SEPARATOR ' '), '') AS address FROM miab_aliases WHERE source != destination AND source NOT LIKE '@%' GROUP BY destination;" -N -B  >> /dev/null
 mysql --defaults-file=/etc/mysql/debian.cnf ${MIAB_SQL_DB} -e "CREATE VIEW sogo_view (c_uid, c_name, c_password, c_cn, mail, aliases, home) AS SELECT email, email, PASSWORD, name, CONVERT(email USING latin1), IFNULL(ga.aliases, ''), CONCAT('$STORAGE_ROOT/mail/mailboxes/', maildir) FROM miab_users LEFT OUTER JOIN grouped_aliases ga ON ga.dest = miab_users.email WHERE active=1;" -N -B  >> /dev/null
 
-apt_install sogo sogo-activesync libwbxml2-0 memcached
+if [ "$(uname -m)" == "aarch64" ]; then
+  apt_install -t unstable sogo sogo-activesync
+else
+  apt_install sogo sogo-activesync
+fi
+apt_install libwbxml2-0 memcached
 
 sudo -u sogo bash -c "
 defaults write sogod SOGoUserSources '({type = sql;id = directory;viewURL = mysql://mailinabox:${MIAB_SQL_PW}@localhost:3306/${MIAB_SQL_DB}/sogo_view;canAuthenticate = YES;isAddressBook = YES;displayName = \"Global Address Book\";MailFieldNames = (aliases);userPasswordAlgorithm = ssha256;})'
