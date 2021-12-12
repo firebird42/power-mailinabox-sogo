@@ -26,7 +26,7 @@ else
 fi
 hide_output apt-get update
 
-if [[ -z $(mysql --defaults-file=/etc/mysql/debian.cnf ${MIAB_SQL_DB} -e "SHOW TABLES LIKE 'sogo_view'" -N -B) ]]; then
+if [[ -n $(mysql --defaults-file=/etc/mysql/debian.cnf ${MIAB_SQL_DB} -e "SHOW TABLES LIKE 'sogo_view'" -N -B) ]]; then
     mysql --defaults-file=/etc/mysql/debian.cnf ${MIAB_SQL_DB} -e "DROP VIEW IF EXISTS grouped_aliases; DROP VIEW IF EXISTS sogo_view;" -N -B  >> /dev/null
 fi
 
@@ -38,7 +38,7 @@ if [ "$(uname -m)" == "aarch64" ]; then
 else
   apt_install sogo sogo-activesync
 fi
-apt_install libwbxml2-0 memcached
+apt_install libwbxml2-0 memcached tmpreaper
 
 sudo -u sogo bash -c "
 defaults write sogod SOGoUserSources '({type = sql;id = directory;viewURL = mysql://mailinabox:${MIAB_SQL_PW}@localhost:3306/${MIAB_SQL_DB}/sogo_view;canAuthenticate = YES;isAddressBook = YES;displayName = \"Global Address Book\";MailFieldNames = (aliases);userPasswordAlgorithm = ssha256;})'
