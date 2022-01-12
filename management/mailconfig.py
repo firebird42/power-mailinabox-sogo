@@ -12,7 +12,6 @@
 import subprocess, shutil, os, re
 import utils
 import pymysql
-pymysql.install_as_MySQLdb()
 from email_validator import validate_email as validate_email_, EmailNotValidError
 import idna
 
@@ -97,7 +96,7 @@ def is_dcv_address(email):
 # but the alternative would be to store the MySQL user password
 # in plain text somewhere? Will surely need to revisit this.
 def open_database(env, with_connection=False):
-	conn = MySQLdb.connect(host="localhost", read_default_file='/etc/mysql/debian.cnf', db="mailinabox")
+	conn = pymysql.connect(host="localhost", read_default_file='/etc/mysql/debian.cnf', db="mailinabox")
 	if not with_connection:
 		return conn.cursor()
 	else:

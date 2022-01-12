@@ -16,8 +16,6 @@ if [ -z "${NONINTERACTIVE:-}" ]; then
 	# we install it inside a virtualenv. In this script, we don't have the virtualenv yet
 	# so we install the python package globally.
 	hide_output pip3 install "email_validator>=1.0.0" mysqlclient PyMySQL || exit 1
-	# PyMySQL setup
-	python3 -c 'exec("""\nimport pymysql\npymysql.install_as_MySQLdb()\n""")'
 
 	message_box "Mail-in-a-Box Installation" \
 		"Hello and thanks for deploying a (Power) Mail-in-a-Box!
