@@ -11,7 +11,8 @@
 
 import subprocess, shutil, os, re
 import utils
-import MySQLdb
+import pymysql
+pymysql.install_as_MySQLdb()
 from email_validator import validate_email as validate_email_, EmailNotValidError
 import idna
 
