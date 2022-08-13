@@ -1,4 +1,8 @@
 # Power Mail-in-a-Box SOGo
+
+> This project is now archived. I could never quite get it to work on the Raspberry Pi 4 I was trying to use at the time.
+> I have since been using [mailcow](https://mailcow.email/) which works great.
+
 **[Installation](#installation)** (current version: v55.1.1)
 
 Power Mail-in-a-Box (a fork of [Mail-in-a-Box](https://mailinabox.email/)) is a complete pre-configured mail appliance, quickly deployable in a matter of minutes.
@@ -6,9 +10,9 @@ Power Mail-in-a-Box (a fork of [Mail-in-a-Box](https://mailinabox.email/)) is a 
 It's main difference to the main project is focused on ad-hoc, advanced features. While Mail-in-a-Box caters to beginners by providing sane configurations, Power Mail-in-a-Box also attempts to cater to advanced users that want deeper levels of customization.
 
 ## About This Fork
-This is a fork of the aforementioned [Power Mail-in-a-Box](https://github.com/ddavness/power-mailinabox). This project replaces Roundcube and Nextcloud with [SOGo](https://www.sogo.nu/) for a more unified experience as inspired by and lifted (read: copied and pasted) from [Mail-in-a-Box SOGo](https://github.com/jkaberg/mailinabox-sogo) (an older, different fork of Mail-in-a-Box) which did something similar with v0.19a of Mail-in-a-Box.
+This is a fork of the aforementioned [Power Mail-in-a-Box](https://github.com/ddavness/power-mailinabox). This project attempts to replace Roundcube and Nextcloud with [SOGo](https://www.sogo.nu/) for a more unified experience as inspired by and lifted (read: copied and pasted) from [Mail-in-a-Box SOGo](https://github.com/jkaberg/mailinabox-sogo) (an older, different fork of Mail-in-a-Box) which did something similar with v0.19a of Mail-in-a-Box.
 This fork has not been tested in any way and I do not recommend putting this in an environment where reliability is a must or even a hope.
-I did this as a personal project because I liked Mail-in-a-Box but wished it had more customizability and then found Power Mail-in-a-Box. Roundcube and Nextcloud were ok, but I was looking for a more unified experience and better ActiveSync support, thus the SOGo port. I am a fairly novice programmer and this is my first time working with MySQL. I expect not all features to work well and there to possibly be many bugs.
+I did this as a personal project because I liked Mail-in-a-Box, but wished it had more customizability and then found Power Mail-in-a-Box. Roundcube and Nextcloud were ok, but I was looking for a more unified experience and better ActiveSync support, thus the SOGo port. I expect not all features to work well and there to be many bugs.
 DO NOT attempt migration or updates, for now.
 
 ## Features
